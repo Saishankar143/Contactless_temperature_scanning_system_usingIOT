@@ -1,0 +1,151 @@
+#define BLYNK_PRINT Serial
+
+#define BLYNK_TEMPLATE_ID "TMPLPJpITRRC"
+#define BLYNK_DEVICE_NAME "JNTUJ"
+#define BLYNK_AUTH_TOKEN "wrJXwYhYSiYvAqLw7513K_sYmZsE4Qw2"
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+#include <SoftwareSerial.h>
+SoftwareSerial rfid(D3, D4); // RX, TX
+
+#include <Adafruit_MLX90614.h>
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+
+
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,16,2);  // for Hardware
+
+String rfval;
+char auth[] = "wrJXwYhYSiYvAqLw7513K_sYmZsE4Qw2";
+
+char ssid[] = "Bobby1";
+char pass[] = "Bobby12091";
+
+float temp=0;
+
+int redled = D6;
+int greenled = D7;
+int buz = D8;
+void setup() {
+  Serial.begin(9600);
+  rfid.begin(9600);
+  Serial.println("Welcome 2 RFID");
+    lcd.init();                      // initialize the lcd 
+  if (!mlx.begin()) {
+    Serial.println("Error connecting to MLX sensor. Check wiring.");
+    while (1);
+  };
+  pinMode(redled, OUTPUT);
+  pinMode(greenled, OUTPUT);
+  pinMode(buz, OUTPUT);
+  digitalWrite(buz,0);
+  digitalWrite(redled,0);
+  digitalWrite(greenled,0);
+  Blynk.begin(auth, ssid, pass);
+
+  lcd.backlight();
+  lcd.setCursor(1,0);
+  lcd.print("Welcome ");
+Blynk.virtualWrite(V0,0);
+Blynk.virtualWrite(V2,0);
+Blynk.virtualWrite(V4,0);
+}
+
+void loop() {
+ int count =0;  
+ rfval="";
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,1);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Show Your ID   ");
+    rfval= "";
+  while(rfid.available()>11)          // Read 12 characters and store them in input array
+  {
+     rfval = rfid.readString();
+     Serial.println(rfval);
+      if(String(rfval)=="6900D72DEF7C") 
+     {
+      Serial.println("Saishankar");
+      lcd.setCursor(0,0);
+      lcd.print("Sai Shankar     ");
+      Blynk.virtualWrite(V0,1);
+      temp = (mlx.readObjectTempF());
+      temp = (mlx.readObjectTempF());
+      Serial.println(temp);
+      checktemp(temp);
+      lcd.setCursor(0,1);
+      lcd.print("Temp: ");
+      lcd.print(temp);
+     // float tempC = (mlx.readObjectTempC());
+     // Serial.println(tempC);
+      Serial.print(mlx.readObjectTempF()); 
+      Serial.println("*F");
+      Blynk.virtualWrite(V1,temp);
+    }
+    else if(String(rfval)=="6900D720A33D")
+    {
+      Blynk.virtualWrite(V2,1);
+      Serial.println("Md Arbaz       ");
+      lcd.setCursor(0,0);
+      lcd.print("Md Arbaz       ");
+      
+      temp = (mlx.readObjectTempF());
+      temp = (mlx.readObjectTempF());
+      Serial.println(temp);
+      checktemp(temp);
+     lcd.setCursor(0,1);
+      lcd.print("Temp: ");
+      lcd.print(temp);
+     
+      Blynk.virtualWrite(V3,temp);
+    }
+    else if(String(rfval)=="6900D6F39FD3")
+    {
+      Blynk.virtualWrite(V4,1);
+      Serial.println("Chandravadan   ");
+      lcd.setCursor(0,0);
+      lcd.print("Chandravadan  ");
+      
+    temp = (mlx.readObjectTempF());
+      temp = (mlx.readObjectTempF());
+      Serial.println(temp);
+      checktemp(temp);
+     lcd.setCursor(0,1);
+      lcd.print("Temp: ");
+      lcd.print(temp);
+     
+      Blynk.virtualWrite(V5,temp);
+    }
+    else
+    {
+       lcd.setCursor(0,0);
+     
+      lcd.print("Invalid ID      ");
+      Serial.println("Not Matched");
+    }
+  }
+  Blynk.run();
+
+  delay(3000);
+  digitalWrite(buz, 0);
+}
+
+void checktemp(float x)
+{
+  if(x>98)
+  {
+    digitalWrite(redled, 1);
+    digitalWrite(greenled, 0);
+    digitalWrite(buz, 1);
+  }
+  else
+  {
+    digitalWrite(redled, 0);
+    digitalWrite(greenled, 1);
+    digitalWrite(buz, 0);
+    
+  }
